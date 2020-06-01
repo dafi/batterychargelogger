@@ -6,4 +6,6 @@
 
     <string name="google_play_missing">This app requires Google Play Services. Please install Google Play Services on your device and relaunch this app.</string>
     <string name="sheet_id">Sheet Id</string>
+    <string name="sheet_name">Sheet Name</string>
+    <string name="save">Save</string>
 </resources>

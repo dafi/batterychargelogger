@@ -26,8 +26,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import kotlin.coroutines.CoroutineContext
 
 class MainActivity
@@ -43,14 +41,39 @@ class MainActivity
         setContentView(R.layout.activity_main)
 
         job = Job()
+        setupUI()
         update()
-        findViewById<Button>(R.id.button).setOnClickListener { updateSheet() }
 
         credential = GoogleAccountCredential.usingOAuth2(
             applicationContext, listOf(*SCOPES)
         )
             .setBackOff(ExponentialBackOff())
 
+    }
+
+    private fun setupUI() {
+        findViewById<Button>(R.id.update).setOnClickListener { updateSheet() }
+        findViewById<Button>(R.id.save).setOnClickListener { save() }
+
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        findViewById<TextView>(R.id.sheetId).text = prefs.sheetId
+        findViewById<TextView>(R.id.sheetName).text = prefs.sheetName
+    }
+
+    private fun save() {
+        val sheetId = findViewById<TextView>(R.id.sheetId).text.toString()
+        val sheetName = findViewById<TextView>(R.id.sheetName).text.toString()
+        val editor = PreferenceManager.getDefaultSharedPreferences(this).edit()
+
+        if (sheetId.isNotBlank()) {
+            editor.putString(PREF_SHEET_ID, sheetId)
+        }
+
+        if (sheetName.isNotBlank()) {
+            editor.putString(PREF_SHEET_NAME, sheetName)
+        }
+
+        editor.apply()
     }
 
     private fun updateSheet() {
@@ -60,25 +83,26 @@ class MainActivity
             chooseAccount()
         } else {
             update()
-                launch(Dispatchers.IO) {
-                    try {
-                    SheetUpdater(
+            val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+            val sheetId = prefs.sheetId ?: return
+            launch(Dispatchers.IO) {
+                try {
+                    LogSheet(
                         getString(R.string.app_name),
                         credential,
-                        "10W-kQ1fSuYG6yVWa2vxJv7YZZxt8foj0mlYX10ZOSaM"
+                        sheetId
+                    ).log(
+                        prefs.sheetName,
+                        "From UI " +
+                                batteryManager.getIntProperty(BATTERY_PROPERTY_CAPACITY).toString()
                     )
-
-                        .fill(
-                            "From UI " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
-                            batteryManager.getIntProperty(BATTERY_PROPERTY_CAPACITY).toString()
-                        )
-                    } catch (t: Throwable) {
-                        t.printStackTrace()
-                        runOnUiThread {
-                            handleUpdateError(t)
-                        }
+                } catch (t: Throwable) {
+                    t.printStackTrace()
+                    runOnUiThread {
+                        handleUpdateError(t)
                     }
                 }
+            }
         }
     }
 
@@ -106,7 +130,8 @@ class MainActivity
             )
         ) {
             val accountName =
-                PreferenceManager.getDefaultSharedPreferences(this).getString(PREF_ACCOUNT_NAME, null)
+                PreferenceManager.getDefaultSharedPreferences(this)
+                    .getString(PREF_ACCOUNT_NAME, null)
             if (accountName != null) {
                 credential.selectedAccountName = accountName
                 updateSheet()
@@ -242,13 +267,13 @@ class MainActivity
 
     private fun update() {
         val lastCapacity = PreferenceManager.getDefaultSharedPreferences(this).lastCapacity
-        findViewById<TextView>(R.id.capacity).text =
-            "${batteryManager.getIntProperty(BATTERY_PROPERTY_CAPACITY)} ($lastCapacity)"
-        findViewById<TextView>(R.id.charging).text = if (isCharging()) {
+        val status = if (isCharging()) {
             "CHARGING"
         } else {
             "NONE"
         }
+        findViewById<TextView>(R.id.status).text =
+            "$status ${batteryManager.getIntProperty(BATTERY_PROPERTY_CAPACITY)} ($lastCapacity)"
     }
 
     fun isCharging(): Boolean {
@@ -262,7 +287,5 @@ class MainActivity
         const val REQUEST_PERMISSION_GET_ACCOUNTS = 1003
 
         private val SCOPES = arrayOf(SheetsScopes.SPREADSHEETS)
-
-        private const val PREF_SHEET_ID_NAME = "sheetId"
     }
 }

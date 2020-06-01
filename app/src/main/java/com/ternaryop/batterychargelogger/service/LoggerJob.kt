@@ -5,12 +5,10 @@ import androidx.preference.PreferenceManager
 import com.ternaryop.batterychargelogger.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 object LoggerJob : Job {
     override fun runJob(jobService: AbsJobService, params: JobParameters?): Boolean {
-        if (isCharging(jobService)) {
+        if (jobService.batteryManager.isChargingStatus) {
             return false
         }
         if (isCapacityHigher(jobService)) {
@@ -21,22 +19,18 @@ object LoggerJob : Job {
     }
 
     private fun log(jobService: AbsJobService) {
-        val credential = getAccount(jobService, PREF_ACCOUNT_NAME) ?: return
         val prefs = PreferenceManager.getDefaultSharedPreferences(jobService)
         val sheetId = prefs.sheetId ?: return
+        val sheetName = prefs.sheetName ?: return
+        val credential = getAccount(jobService, PREF_ACCOUNT_NAME) ?: return
 
         jobService.launch(Dispatchers.IO) {
             try {
-                val now = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                SheetUpdater(
+                LogSheet(
                     jobService.getString(R.string.app_name),
                     credential,
                     sheetId
-                )
-                    .fill(
-                        "From job $now",
-                        jobService.batteryManager.capacity.toString()
-                    )
+                ).log(sheetName, jobService.batteryManager.capacity.toString())
             } catch (t: Throwable) {
                 t.printStackTrace()
             }
@@ -52,11 +46,5 @@ object LoggerJob : Job {
 
 //        return capacity > lastCapacity
         return true
-    }
-
-    private fun isCharging(jobService: AbsJobService): Boolean {
-        val isCharging = jobService.batteryManager.isChargingStatus
-
-        return isCharging
     }
 }
