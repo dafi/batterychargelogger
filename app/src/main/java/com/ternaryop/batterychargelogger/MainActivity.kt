@@ -8,8 +8,6 @@ import android.os.BatteryManager
 import android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY
 import android.os.BatteryManager.BATTERY_STATUS_CHARGING
 import android.os.Bundle
-import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
@@ -20,6 +18,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlaySe
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.client.util.ExponentialBackOff
 import com.google.api.services.sheets.v4.SheetsScopes
+import com.ternaryop.batterychargelogger.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -31,14 +30,19 @@ import kotlin.coroutines.CoroutineContext
 class MainActivity
     : AppCompatActivity(),
     EasyPermissions.PermissionCallbacks, CoroutineScope {
-    protected lateinit var job: Job
+    private lateinit var job: Job
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
     private lateinit var credential: GoogleAccountCredential
 
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
 
         job = Job()
         setupUI()
@@ -52,17 +56,33 @@ class MainActivity
     }
 
     private fun setupUI() {
-        findViewById<Button>(R.id.update).setOnClickListener { updateSheet() }
-        findViewById<Button>(R.id.save).setOnClickListener { save() }
+        binding.update.setOnClickListener { updateSheet() }
+        binding.save.setOnClickListener { save() }
+        binding.refreshLog.setOnClickListener { refreshLog() }
+        binding.clearLog.setOnClickListener { clearLog() }
+        binding.deleteLog.setOnClickListener { deleteLog() }
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        findViewById<TextView>(R.id.sheetId).text = prefs.sheetId
-        findViewById<TextView>(R.id.sheetName).text = prefs.sheetName
+        binding.sheetId.setText(prefs.sheetId)
+        binding.sheetName.setText(prefs.sheetName)
+    }
+
+    private fun deleteLog() {
+        Log.delete(this)
+        clearLog()
+    }
+
+    private fun clearLog() {
+        binding.logContent.setText("")
+    }
+
+    private fun refreshLog() {
+        binding.logContent.setText(Log.readContent(this))
     }
 
     private fun save() {
-        val sheetId = findViewById<TextView>(R.id.sheetId).text.toString()
-        val sheetName = findViewById<TextView>(R.id.sheetName).text.toString()
+        val sheetId = binding.sheetId.text.toString()
+        val sheetName = binding.sheetName.text.toString()
         val editor = PreferenceManager.getDefaultSharedPreferences(this).edit()
 
         if (sheetId.isNotBlank()) {
@@ -77,9 +97,12 @@ class MainActivity
     }
 
     private fun updateSheet() {
+        Log.write(this, "UpdateSheet")
         if (!isGooglePlayServicesAvailable()) {
+            Log.write(this, "acquireGooglePlayServices")
             acquireGooglePlayServices()
         } else if (credential.selectedAccountName == null) {
+            Log.write(this, "chooseAccount")
             chooseAccount()
         } else {
             update()
@@ -97,7 +120,7 @@ class MainActivity
                                 batteryManager.getIntProperty(BATTERY_PROPERTY_CAPACITY).toString()
                     )
                 } catch (t: Throwable) {
-                    t.printStackTrace()
+                    Log.write(applicationContext, t, "UpdateSheet")
                     runOnUiThread {
                         handleUpdateError(t)
                     }
@@ -272,8 +295,7 @@ class MainActivity
         } else {
             "NONE"
         }
-        findViewById<TextView>(R.id.status).text =
-            "$status ${batteryManager.getIntProperty(BATTERY_PROPERTY_CAPACITY)} ($lastCapacity)"
+        binding.status.text = "$status ${batteryManager.getIntProperty(BATTERY_PROPERTY_CAPACITY)} ($lastCapacity)"
     }
 
     fun isCharging(): Boolean {

@@ -30,7 +30,7 @@ class LogSheet(
 
         val now = LocalDateTime.now()
         val date = now.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-        val time = now.format(DateTimeFormatter.ofPattern("hh:mm:ss"))
+        val time = now.format(DateTimeFormatter.ofPattern("HH.mm.ss"))
 
         val results = listOf(date, time, message)
         val list = listOf(results)

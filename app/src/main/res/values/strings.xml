@@ -8,4 +8,7 @@
     <string name="sheet_id">Sheet Id</string>
     <string name="sheet_name">Sheet Name</string>
     <string name="save">Save</string>
+    <string name="clear_log">CL</string>
+    <string name="refresh_log">R</string>
+    <string name="delete_log">Del</string>
 </resources>

@@ -21,10 +21,8 @@
         android:id="@+id/update"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
-        android:layout_marginBottom="492dp"
         android:text="@string/update"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/status"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <EditText
@@ -61,4 +59,45 @@
         app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/sheetName" />
+
+    <EditText
+        android:id="@+id/log_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:ems="10"
+        android:gravity="start|top"
+        android:importantForAutofill="no"
+        android:inputType="textMultiLine"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/clear_log"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/update" />
+
+    <Button
+        android:id="@+id/clear_log"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/clear_log"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/log_content"
+        app:layout_constraintTop_toTopOf="@id/log_content" />
+
+    <Button
+        android:id="@+id/refresh_log"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/refresh_log"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/log_content"
+        app:layout_constraintTop_toBottomOf="@id/clear_log" />
+
+    <Button
+        android:id="@+id/delete_log"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/delete_log"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/log_content"
+        app:layout_constraintTop_toBottomOf="@id/refresh_log" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

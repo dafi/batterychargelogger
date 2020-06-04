@@ -8,7 +8,9 @@ import kotlinx.coroutines.launch
 
 object LoggerJob : Job {
     override fun runJob(jobService: AbsJobService, params: JobParameters?): Boolean {
+        Log.write(jobService, "runJob")
         if (jobService.batteryManager.isChargingStatus) {
+            Log.write(jobService, "runJob.isChargingStatus")
             return false
         }
         if (isCapacityHigher(jobService)) {
@@ -32,7 +34,7 @@ object LoggerJob : Job {
                     sheetId
                 ).log(sheetName, jobService.batteryManager.capacity.toString())
             } catch (t: Throwable) {
-                t.printStackTrace()
+                Log.write(jobService, t)
             }
         }
     }
@@ -44,7 +46,7 @@ object LoggerJob : Job {
 
         prefs.updateCapacity(capacity)
 
-//        return capacity > lastCapacity
-        return true
+        Log.write(jobService, "isCapacityHigher capacity = $capacity, lastCapacity = $lastCapacity")
+        return capacity > lastCapacity
     }
 }
