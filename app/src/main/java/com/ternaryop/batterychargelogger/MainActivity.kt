@@ -55,12 +55,20 @@ class MainActivity
 
     }
 
+    override fun onResume() {
+        super.onResume()
+        refreshLog()
+    }
+
     private fun setupUI() {
         binding.update.setOnClickListener { updateSheet() }
         binding.save.setOnClickListener { save() }
         binding.refreshLog.setOnClickListener { refreshLog() }
         binding.clearLog.setOnClickListener { clearLog() }
         binding.deleteLog.setOnClickListener { deleteLog() }
+
+        binding.logContent.isFocusableInTouchMode = false;
+        binding.logContent.clearFocus();
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         binding.sheetId.setText(prefs.sheetId)
