@@ -8,6 +8,7 @@ import android.os.BatteryManager
 import android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY
 import android.os.BatteryManager.BATTERY_STATUS_CHARGING
 import android.os.Bundle
+import android.text.method.ScrollingMovementMethod
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
@@ -67,8 +68,7 @@ class MainActivity
         binding.clearLog.setOnClickListener { clearLog() }
         binding.deleteLog.setOnClickListener { deleteLog() }
 
-        binding.logContent.isFocusableInTouchMode = false;
-        binding.logContent.clearFocus();
+        binding.logContent.movementMethod = ScrollingMovementMethod()
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         binding.sheetId.setText(prefs.sheetId)
@@ -81,7 +81,7 @@ class MainActivity
     }
 
     private fun clearLog() {
-        binding.logContent.setText("")
+        binding.logContent.text = ""
     }
 
     private fun refreshLog() {

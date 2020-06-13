@@ -13,38 +13,46 @@ object LoggerJob : Job {
             Log.write(jobService, "runJob.isChargingStatus")
             return false
         }
-        if (isCapacityHigher(jobService)) {
-            log(jobService)
+        val capacity = jobService.batteryManager.capacity
+        val prefs = PreferenceManager.getDefaultSharedPreferences(jobService)
+        if (isCapacityHigher(jobService, capacity)) {
+            try {
+                log(jobService)
+                prefs.updateCapacity(capacity)
+            } catch (t: Throwable) {
+                Log.write(jobService, t)
+            }
             return true
         }
+        prefs.updateCapacity(capacity)
         return false
     }
 
     private fun log(jobService: AbsJobService) {
+        Log.write(jobService, "preparing for logging")
         val prefs = PreferenceManager.getDefaultSharedPreferences(jobService)
         val sheetId = prefs.sheetId ?: return
         val sheetName = prefs.sheetName ?: return
         val credential = getAccount(jobService, PREF_ACCOUNT_NAME) ?: return
 
+        Log.write(jobService, "log to sheet")
         jobService.launch(Dispatchers.IO) {
-            try {
-                LogSheet(
-                    jobService.getString(R.string.app_name),
-                    credential,
-                    sheetId
-                ).log(sheetName, jobService.batteryManager.capacity.toString())
-            } catch (t: Throwable) {
-                Log.write(jobService, t)
-            }
+            val capacity = jobService.batteryManager.capacity
+            LogSheet(
+                jobService.getString(R.string.app_name),
+                credential,
+                sheetId
+            ).log(sheetName, capacity.toString())
+            Log.write(jobService, "Logged with success")
         }
     }
 
-    private fun isCapacityHigher(jobService: AbsJobService): Boolean {
+    private fun isCapacityHigher(
+        jobService: AbsJobService,
+        capacity: Int
+    ): Boolean {
         val prefs = PreferenceManager.getDefaultSharedPreferences(jobService)
         val lastCapacity = prefs.lastCapacity
-        val capacity = jobService.batteryManager.capacity
-
-        prefs.updateCapacity(capacity)
 
         Log.write(jobService, "isCapacityHigher capacity = $capacity, lastCapacity = $lastCapacity")
         return capacity > lastCapacity

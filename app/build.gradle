@@ -5,9 +5,7 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 29
 
-    viewBinding {
-        enabled = true
-    }
+    android.buildFeatures.viewBinding = true
 
     defaultConfig {
         applicationId "com.ternaryop.batterychargelogger"
